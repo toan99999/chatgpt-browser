@@ -44,6 +44,6 @@ jobs:
           draft: true
           fail_on_unmatched_files: true
           files: |
-            dist/Muse.ipa
-            dist/Muse-TrollStore.tipa
-            dist/Muse-Jailbroken.ipa
+            dist/ChatGPT.ipa
+            dist/ChatGPT-TrollStore.tipa
+            dist/ChatGPT-Jailbroken.ipa
