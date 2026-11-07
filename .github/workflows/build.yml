@@ -33,7 +33,6 @@ permissions:
 
 jobs:
   prepare:
-    if: ${{ github.repository_owner == 'minh-ton' }}
     name: Select build variants
     runs-on: ubuntu-latest
     outputs:
@@ -185,22 +184,22 @@ jobs:
         if: ${{ matrix.variant == 'standard' && inputs.build_normal_ipa }}
         uses: actions/upload-artifact@v4
         with:
-          name: Reynard.ipa
-          path: dist/Reynard.ipa
+          name: MuSe.ipa
+          path: dist/MuSe.ipa
           if-no-files-found: error
 
       - name: Upload TrollStore TIPA
         if: ${{ matrix.variant == 'standard' && inputs.build_trollstore_tipa }}
         uses: actions/upload-artifact@v4
         with:
-          name: Reynard-TrollStore.tipa
-          path: dist/Reynard-TrollStore.tipa
+          name: MuSe-TrollStore.tipa
+          path: dist/MuSe-TrollStore.tipa
           if-no-files-found: error
 
       - name: Upload Jailbroken IPA
         if: ${{ matrix.variant == 'nojemalloc' && inputs.build_jailbroken_ipa }}
         uses: actions/upload-artifact@v4
         with:
-          name: Reynard-Jailbroken.ipa
-          path: dist/Reynard-Jailbroken.ipa
+          name: MuSe-Jailbroken.ipa
+          path: dist/MuSe-Jailbroken.ipa
           if-no-files-found: error

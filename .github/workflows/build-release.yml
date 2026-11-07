@@ -44,6 +44,6 @@ jobs:
           draft: true
           fail_on_unmatched_files: true
           files: |
-            dist/Reynard.ipa
-            dist/Reynard-TrollStore.tipa
-            dist/Reynard-Jailbroken.ipa
+            dist/MuSe.ipa
+            dist/MuSe-TrollStore.tipa
+            dist/MuSe-Jailbroken.ipa
