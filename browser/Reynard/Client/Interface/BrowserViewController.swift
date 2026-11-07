@@ -229,7 +229,12 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
         let showsHomepage = tabManager.selectedTab.map(homepageOverlayCoordinator.isHomepageTab) ?? false
         toolbarController.updateLayout(
             chromeMode: browserLayout.chromeMode,
-            isToolbarEnabled: !isShowingFullscreenMedia,
+            // Muse: toolbar is always hidden — report it as disabled so Gecko
+            // gets a 0-height dynamic toolbar and the page uses the full
+            // viewport. Otherwise the hidden bottom toolbar still reports
+            // 94pt and the web page lays out in a viewport shorter than the
+            // screen (dead space below the last message in muse.ai chat).
+            isToolbarEnabled: false,
             extendsContentBehindToolbar: showsHomepage
         )
         homepageOverlayCoordinator.updateVisibleContentInsets()
@@ -311,7 +316,12 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
             contentView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             contentView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             contentView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor).withPriority(.defaultHigh),
-            contentView.bottomAnchor.constraint(equalTo: browserChrome.bottomToolbarTopAnchor).withPriority(.defaultHigh),
+            // Muse: toolbar is always hidden — anchor the content view to the
+            // safe-area bottom, not to the hidden bottom toolbar's top edge
+            // (that toolbar still occupies 94pt of layout height while hidden,
+            // which shrank the web view and left dead space at the bottom of
+            // web pages). Matches applyPhoneLayout/applyCompactLayout.
+            contentView.bottomAnchor.constraint(equalTo: view.safeAreaLayoutGuide.bottomAnchor).withPriority(.defaultHigh),
             browserChrome.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             browserChrome.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             browserChrome.topAnchor.constraint(equalTo: view.topAnchor),
