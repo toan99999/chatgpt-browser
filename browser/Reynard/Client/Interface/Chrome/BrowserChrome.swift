@@ -226,15 +226,9 @@ final class BrowserChrome: UIView, UIGestureRecognizerDelegate {
             dismissActionBar(animated: false)
         }
         
-        let topState: TopToolbar.LayoutState
-        let bottomState: BottomToolbar.LayoutState
-        if state.presentation != .browsing {
-            topState = .hidden
-            bottomState = state.mode == .compact ? .collapsed : .hidden
-        } else {
-            topState = resolvedTopState(for: state)
-            bottomState = resolvedBottomState(for: state)
-        }
+        // MuSe: toolbar is always hidden, regardless of presentation/mode
+        let topState: TopToolbar.LayoutState = .hidden
+        let bottomState: BottomToolbar.LayoutState = .hidden
         
         topToolbar.apply(
             state: topState,
