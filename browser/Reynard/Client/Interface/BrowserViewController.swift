@@ -168,9 +168,9 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
         applyUpdateMenuButtonBadge()
         
         tabManager.createInitialTab()
-        // Muse: always open straight to Muse on launch
-        if let tab = tabManager.selectedTab, tab.url != "https://muse.ai" {
-            tabManager.browse(to: "https://muse.ai", in: tab)
+        // ChatGPT: always open straight to ChatGPT on launch
+        if let tab = tabManager.selectedTab, tab.url != "https://chatgpt.com" {
+            tabManager.browse(to: "https://chatgpt.com", in: tab)
         }
         refreshAddressBar()
         homepageOverlayCoordinator.updatePresentation(animated: false)
@@ -229,11 +229,11 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
         let showsHomepage = tabManager.selectedTab.map(homepageOverlayCoordinator.isHomepageTab) ?? false
         toolbarController.updateLayout(
             chromeMode: browserLayout.chromeMode,
-            // Muse: toolbar is always hidden — report it as disabled so Gecko
+            // ChatGPT: toolbar is always hidden — report it as disabled so Gecko
             // gets a 0-height dynamic toolbar and the page uses the full
             // viewport. Otherwise the hidden bottom toolbar still reports
             // 94pt and the web page lays out in a viewport shorter than the
-            // screen (dead space below the last message in muse.ai chat).
+            // screen (dead space below the last message in chatgpt.com chat).
             isToolbarEnabled: false,
             extendsContentBehindToolbar: showsHomepage
         )
@@ -316,7 +316,7 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
             contentView.leadingAnchor.constraint(equalTo: view.leadingAnchor),
             contentView.trailingAnchor.constraint(equalTo: view.trailingAnchor),
             contentView.topAnchor.constraint(equalTo: view.safeAreaLayoutGuide.topAnchor).withPriority(.defaultHigh),
-            // Muse: toolbar is always hidden — anchor the content view to the
+            // ChatGPT: toolbar is always hidden — anchor the content view to the
             // safe-area bottom, not to the hidden bottom toolbar's top edge
             // (that toolbar still occupies 94pt of layout height while hidden,
             // which shrank the web view and left dead space at the bottom of
@@ -622,7 +622,7 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
         contentView.applyLayout(
             ContentView.LayoutState(mode: isSearchFocused ? .searchFocused : .standard),
             topAnchor: view.safeAreaLayoutGuide.topAnchor,
-            bottomAnchor: view.safeAreaLayoutGuide.bottomAnchor // Muse: toolbar hidden, content fills screen
+            bottomAnchor: view.safeAreaLayoutGuide.bottomAnchor // ChatGPT: toolbar hidden, content fills screen
         )
         tabBar.setVisibility(.hidden, animated: false)
     }
@@ -630,8 +630,8 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
     private func applyCompactLayout() {
         contentView.applyLayout(
             ContentView.LayoutState(mode: .standard),
-            topAnchor: view.safeAreaLayoutGuide.topAnchor, // Muse: toolbar hidden
-            bottomAnchor: view.safeAreaLayoutGuide.bottomAnchor // Muse: toolbar hidden
+            topAnchor: view.safeAreaLayoutGuide.topAnchor, // ChatGPT: toolbar hidden
+            bottomAnchor: view.safeAreaLayoutGuide.bottomAnchor // ChatGPT: toolbar hidden
         )
         tabBar.setVisibility(.hidden, animated: false)
     }
@@ -639,7 +639,7 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
     private func applyPadLayout(animated: Bool) {
         contentView.applyLayout(
             ContentView.LayoutState(mode: .standard),
-            topAnchor: view.safeAreaLayoutGuide.topAnchor, // Muse: toolbar hidden
+            topAnchor: view.safeAreaLayoutGuide.topAnchor, // ChatGPT: toolbar hidden
             bottomAnchor: view.bottomAnchor
         )
         tabBar.setVisibility(targetTabBarVisibility, animated: animated)
@@ -1087,7 +1087,7 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
     
     func syncBrowserNavigationChrome(animated: Bool) {
         navigationController?.setNavigationBarHidden(true, animated: animated)
-        // Muse: no back navigation — disable the navigation controller's
+        // ChatGPT: no back navigation — disable the navigation controller's
         // swipe-back gesture as well, so no back button or gesture remains.
         navigationController?.interactivePopGestureRecognizer?.isEnabled = false
         navigationItem.leftItemsSupplementBackButton = false
@@ -1108,7 +1108,7 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
             return
         }
         
-        // Muse: no back navigation — the app always opens to muse.ai, so the
+        // ChatGPT: no back navigation — the app always opens to chatgpt.com, so the
         // back button is disabled and the swipe-back gesture (which slides the
         // previous page in with its own header) is turned off entirely.
         browserChrome.updateNavigation(
