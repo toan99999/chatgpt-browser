@@ -124,7 +124,7 @@ final class OpenInViewController: UIViewController {
     
     private func finishWithError(message: String) {
         let error = NSError(
-            domain: "ai.muse.browser.OpenIn",
+            domain: "ai.chatgpt.browser.OpenIn",
             code: 1,
             userInfo: [NSLocalizedDescriptionKey: message]
         )
