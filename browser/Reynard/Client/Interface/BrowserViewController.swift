@@ -168,6 +168,10 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
         applyUpdateMenuButtonBadge()
         
         tabManager.createInitialTab()
+        // MuSe: always open straight to Muse on launch
+        if let tab = tabManager.selectedTab, tab.url != "https://muse.ai" {
+            tabManager.browse(to: "https://muse.ai", in: tab)
+        }
         refreshAddressBar()
         homepageOverlayCoordinator.updatePresentation(animated: false)
         
@@ -608,9 +612,7 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
         contentView.applyLayout(
             ContentView.LayoutState(mode: isSearchFocused ? .searchFocused : .standard),
             topAnchor: view.safeAreaLayoutGuide.topAnchor,
-            bottomAnchor: isSearchFocused
-            ? view.safeAreaLayoutGuide.bottomAnchor
-            : browserChrome.bottomToolbarTopAnchor
+            bottomAnchor: view.safeAreaLayoutGuide.bottomAnchor // MuSe: toolbar hidden, content fills screen
         )
         tabBar.setVisibility(.hidden, animated: false)
     }
@@ -618,8 +620,8 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
     private func applyCompactLayout() {
         contentView.applyLayout(
             ContentView.LayoutState(mode: .standard),
-            topAnchor: browserChrome.topToolbarBottomAnchor,
-            bottomAnchor: browserChrome.bottomToolbarTopAnchor
+            topAnchor: view.safeAreaLayoutGuide.topAnchor, // MuSe: toolbar hidden
+            bottomAnchor: view.safeAreaLayoutGuide.bottomAnchor // MuSe: toolbar hidden
         )
         tabBar.setVisibility(.hidden, animated: false)
     }
@@ -627,7 +629,7 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
     private func applyPadLayout(animated: Bool) {
         contentView.applyLayout(
             ContentView.LayoutState(mode: .standard),
-            topAnchor: browserChrome.tabBarBottomAnchor,
+            topAnchor: view.safeAreaLayoutGuide.topAnchor, // MuSe: toolbar hidden
             bottomAnchor: view.bottomAnchor
         )
         tabBar.setVisibility(targetTabBarVisibility, animated: animated)
