@@ -1087,6 +1087,9 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
     
     func syncBrowserNavigationChrome(animated: Bool) {
         navigationController?.setNavigationBarHidden(true, animated: animated)
+        // Muse: no back navigation — disable the navigation controller's
+        // swipe-back gesture as well, so no back button or gesture remains.
+        navigationController?.interactivePopGestureRecognizer?.isEnabled = false
         navigationItem.leftItemsSupplementBackButton = false
         navigationItem.hidesBackButton = true
         navigationItem.leftBarButtonItems = []
@@ -1105,19 +1108,22 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
             return
         }
         
+        // Muse: no back navigation — the app always opens to muse.ai, so the
+        // back button is disabled and the swipe-back gesture (which slides the
+        // previous page in with its own header) is turned off entirely.
         browserChrome.updateNavigation(
-            canGoBack: tabManager.canGoBack,
+            canGoBack: false,
             canGoForward: tab.state.navigationState.canGoForward,
             canShare: tabManager.shareableURL(for: tab) != nil
         )
         
         let previewImages = tabManager.navigationPreviewImages(for: tab)
         contentView.setHistoryNavigation(
-            canGoBack: tabManager.canGoBack,
+            canGoBack: false,
             canGoForward: tab.state.navigationState.canGoForward,
-            backPreviewImage: tab.state.navigationState.canGoBack ? previewImages.backImage : nil,
+            backPreviewImage: nil,
             forwardPreviewImage: previewImages.forwardImage,
-            isSwipeEnabled: true
+            isSwipeEnabled: false
         )
     }
     
