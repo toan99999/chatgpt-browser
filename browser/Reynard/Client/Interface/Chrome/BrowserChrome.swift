@@ -226,7 +226,7 @@ final class BrowserChrome: UIView, UIGestureRecognizerDelegate {
             dismissActionBar(animated: false)
         }
         
-        // MuSe: toolbar is always hidden, regardless of presentation/mode
+        // Muse: toolbar is always hidden, regardless of presentation/mode
         let topState: TopToolbar.LayoutState = .hidden
         let bottomState: BottomToolbar.LayoutState = .hidden
         
