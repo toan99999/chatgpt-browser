@@ -77,11 +77,11 @@ final class BrowserPreferences {
             key("BrowsingSettings", "readerViewFontType"): ReaderViewFontType.serif.rawValue,
             
             // New Tab
-            key("NewTabSettings", "newTabDisplayOption"): NewTabDisplayOption.customURL.rawValue, // MuSe: new tab opens Muse
-            key("NewTabSettings", "customNewTabURL"): "https://muse.ai", // MuSe
+            key("NewTabSettings", "newTabDisplayOption"): NewTabDisplayOption.customURL.rawValue, // Muse: new tab opens Muse
+            key("NewTabSettings", "customNewTabURL"): "https://muse.ai", // Muse
             
             // Homepage
-            key("HomepageSettings", "openingScreen"): HomepageOpeningScreen.lastTab.rawValue, // MuSe: no homepage on launch, viewDidLoad opens Muse
+            key("HomepageSettings", "openingScreen"): HomepageOpeningScreen.lastTab.rawValue, // Muse: no homepage on launch, viewDidLoad opens Muse
             key("HomepageSettings", "showsFavorites"): true,
             key("HomepageSettings", "showsFavoritesInPrivateBrowsing"): false,
             key("HomepageSettings", "favoriteRowCount"): 2,
@@ -611,7 +611,7 @@ final class BrowserPreferences {
     struct NewTabSettings {
         static var newTabDisplayOption: NewTabDisplayOption {
             get {
-                let rawValue = prefs.string(forSetting: "NewTabSettings", key: "newTabDisplayOption") ?? NewTabDisplayOption.customURL.rawValue // MuSe
+                let rawValue = prefs.string(forSetting: "NewTabSettings", key: "newTabDisplayOption") ?? NewTabDisplayOption.customURL.rawValue // Muse
                 return NewTabDisplayOption(rawValue: rawValue) ?? .homepage
             }
             set {
@@ -622,7 +622,7 @@ final class BrowserPreferences {
         
         static var customNewTabURL: String {
             get {
-                return prefs.string(forSetting: "NewTabSettings", key: "customNewTabURL") ?? "https://muse.ai" // MuSe
+                return prefs.string(forSetting: "NewTabSettings", key: "customNewTabURL") ?? "https://muse.ai" // Muse
             }
             set {
                 prefs.set(newValue.trimmingCharacters(in: .whitespacesAndNewlines), forSetting: "NewTabSettings", key: "customNewTabURL")
