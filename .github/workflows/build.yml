@@ -151,18 +151,38 @@ jobs:
       - name: Set up sccache
         uses: mozilla-actions/sccache-action@v0.0.11
 
-      # MuSe: dist-cache reverted (2026-11-07) — run #5 proved the cached dist
-      # is incomplete: Build app failed on missing dist/include/ErrorList.h
-      # (a generated header the cache did not restore), even though run #3
-      # saved it and Build Gecko was correctly skipped on the cache hit.
-      # Back to a full Gecko build every run; sccache still makes it ~51min.
+      # Muse: cache the WHOLE Gecko objdir, not just dist. Run #5 proved a
+      # dist-only cache is incomplete (missing generated header ErrorList.h),
+      # so cache the full build tree instead — it is self-contained. Key covers
+      # everything that affects the engine. First run on a new key is a cache
+      # miss (full ~51min Gecko build with sccache, seeds the cache); later
+      # runs restore it and skip Build Gecko (~15-20min total). Restore/save
+      # are continue-on-error so a cache problem (e.g. over the 10GB repo
+      # limit) can never fail the build — sccache stays the fallback.
+      - name: Restore Gecko objdir cache
+        id: gecko_objdir
+        continue-on-error: true
+        uses: actions/cache/restore@v4
+        with:
+          path: engine/firefox/obj-aarch64-apple-ios
+          key: gecko-objdir-${{ matrix.variant }}-xcode-26.6-${{ steps.rust_toolchain.outputs.hash }}-${{ hashFiles('engine/release.txt', 'patches/**', 'tools/development/build-gecko.sh', 'tools/development/apply-patches.sh') }}
+
       - name: Build Gecko
+        if: steps.gecko_objdir.outputs.cache-hit != 'true'
         env:
           CC: clang
           CXX: clang++
           LD: ld64.lld
           MOZ_NOSPAM: "1"
         run: ./tools/development/build-gecko.sh ${{ matrix.build_args }}
+
+      - name: Save Gecko objdir cache
+        if: steps.gecko_objdir.outputs.cache-hit != 'true'
+        continue-on-error: true
+        uses: actions/cache/save@v4
+        with:
+          path: engine/firefox/obj-aarch64-apple-ios
+          key: gecko-objdir-${{ matrix.variant }}-xcode-26.6-${{ steps.rust_toolchain.outputs.hash }}-${{ hashFiles('engine/release.txt', 'patches/**', 'tools/development/build-gecko.sh', 'tools/development/apply-patches.sh') }}
 
       - name: Build idevice support library
         run: ./tools/development/build-idevice.sh
@@ -189,22 +209,22 @@ jobs:
         if: ${{ matrix.variant == 'standard' && inputs.build_normal_ipa }}
         uses: actions/upload-artifact@v4
         with:
-          name: MuSe.ipa
-          path: dist/MuSe.ipa
+          name: Muse.ipa
+          path: dist/Muse.ipa
           if-no-files-found: error
 
       - name: Upload TrollStore TIPA
         if: ${{ matrix.variant == 'standard' && inputs.build_trollstore_tipa }}
         uses: actions/upload-artifact@v4
         with:
-          name: MuSe-TrollStore.tipa
-          path: dist/MuSe-TrollStore.tipa
+          name: Muse-TrollStore.tipa
+          path: dist/Muse-TrollStore.tipa
           if-no-files-found: error
 
       - name: Upload Jailbroken IPA
         if: ${{ matrix.variant == 'nojemalloc' && inputs.build_jailbroken_ipa }}
         uses: actions/upload-artifact@v4
         with:
-          name: MuSe-Jailbroken.ipa
-          path: dist/MuSe-Jailbroken.ipa
+          name: Muse-Jailbroken.ipa
+          path: dist/Muse-Jailbroken.ipa
           if-no-files-found: error

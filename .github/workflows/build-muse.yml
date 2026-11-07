@@ -1,7 +1,7 @@
-# MuSe: build only the TrollStore .tipa (iOS 14 - 16.6.1, 17.0)
-# Run from Actions tab -> Build MuSe (TrollStore) -> Run workflow
-# Result: artifact MuSe-TrollStore.tipa, install with TrollStore on iOS 17.0
-name: Build MuSe (TrollStore)
+# Muse: build only the TrollStore .tipa (iOS 14 - 16.6.1, 17.0)
+# Run from Actions tab -> Build Muse (TrollStore) -> Run workflow
+# Result: artifact Muse-TrollStore.tipa, install with TrollStore on iOS 17.0
+name: Build Muse (TrollStore)
 
 on:
   workflow_dispatch:

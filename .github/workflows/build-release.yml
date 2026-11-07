@@ -44,6 +44,6 @@ jobs:
           draft: true
           fail_on_unmatched_files: true
           files: |
-            dist/MuSe.ipa
-            dist/MuSe-TrollStore.tipa
-            dist/MuSe-Jailbroken.ipa
+            dist/Muse.ipa
+            dist/Muse-TrollStore.tipa
+            dist/Muse-Jailbroken.ipa
