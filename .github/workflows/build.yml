@@ -151,35 +151,18 @@ jobs:
       - name: Set up sccache
         uses: mozilla-actions/sccache-action@v0.0.11
 
-      # MuSe: the Xcode app build only consumes the Gecko "dist" output
-      # (headers + libs, see GECKO_DIST in browser/Configuration/Reynard.xcconfig),
-      # not the whole objdir. Cache dist so Swift-only changes skip the ~40min
-      # Gecko build. Key covers everything that affects dist: Firefox release,
-      # patches, build script, Rust toolchain, Xcode version, variant.
-      # Restore/save are explicit steps (not actions/cache's auto-save) so a
-      # cancelled/failed Gecko build can never poison the cache with a partial dist.
-      - name: Restore Gecko dist cache
-        id: gecko_dist
-        uses: actions/cache/restore@v4
-        with:
-          path: engine/firefox/obj-aarch64-apple-ios/dist
-          key: gecko-dist-${{ matrix.variant }}-xcode-26.6-${{ steps.rust_toolchain.outputs.hash }}-${{ hashFiles('engine/release.txt', 'patches/**', 'tools/development/build-gecko.sh', 'tools/development/apply-patches.sh') }}
-
+      # MuSe: dist-cache reverted (2026-11-07) — run #5 proved the cached dist
+      # is incomplete: Build app failed on missing dist/include/ErrorList.h
+      # (a generated header the cache did not restore), even though run #3
+      # saved it and Build Gecko was correctly skipped on the cache hit.
+      # Back to a full Gecko build every run; sccache still makes it ~51min.
       - name: Build Gecko
-        if: steps.gecko_dist.outputs.cache-hit != 'true'
         env:
           CC: clang
           CXX: clang++
           LD: ld64.lld
           MOZ_NOSPAM: "1"
         run: ./tools/development/build-gecko.sh ${{ matrix.build_args }}
-
-      - name: Save Gecko dist cache
-        if: steps.gecko_dist.outputs.cache-hit != 'true'
-        uses: actions/cache/save@v4
-        with:
-          path: engine/firefox/obj-aarch64-apple-ios/dist
-          key: gecko-dist-${{ matrix.variant }}-xcode-26.6-${{ steps.rust_toolchain.outputs.hash }}-${{ hashFiles('engine/release.txt', 'patches/**', 'tools/development/build-gecko.sh', 'tools/development/apply-patches.sh') }}
 
       - name: Build idevice support library
         run: ./tools/development/build-idevice.sh
