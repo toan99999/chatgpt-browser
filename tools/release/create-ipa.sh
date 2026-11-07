@@ -13,16 +13,16 @@ WORK_DIR="$ROOT_DIR/dist/Reynard"
 BUILD_TYPE="${1:-normal}"
 case "$BUILD_TYPE" in
 	--trollstore)
-		OUTPUT_NAME="MuSe-TrollStore.tipa"
+		OUTPUT_NAME="Muse-TrollStore.tipa"
 		PTRACE_JIT_NAME="ts_ptrace_jit"
 		;;
 	--jailbroken)
-		OUTPUT_NAME="MuSe-Jailbroken.ipa"
+		OUTPUT_NAME="Muse-Jailbroken.ipa"
 		PTRACE_JIT_NAME="jb_ptrace_jit"
 		;;
 	*)
 		BUILD_TYPE="normal"
-		OUTPUT_NAME="MuSe.ipa"
+		OUTPUT_NAME="Muse.ipa"
 		;;
 esac
 
