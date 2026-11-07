@@ -993,7 +993,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = Extensions/OpenIn/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Open in MuSe";
+				INFOPLIST_KEY_CFBundleDisplayName = "Open in Muse";
 				IPHONEOS_DEPLOYMENT_TARGET = "$(IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -1030,7 +1030,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				HEADER_SEARCH_PATHS = "";
 				INFOPLIST_FILE = Extensions/OpenIn/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = "Open in MuSe";
+				INFOPLIST_KEY_CFBundleDisplayName = "Open in Muse";
 				IPHONEOS_DEPLOYMENT_TARGET = "$(IPHONEOS_DEPLOYMENT_TARGET)";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
