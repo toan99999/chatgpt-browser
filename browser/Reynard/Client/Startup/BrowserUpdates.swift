@@ -20,13 +20,15 @@ final class BrowserUpdates: NSObject {
         super.init()
         
         guard let docs = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first else { return }
-        let sideloadIPA = docs.appendingPathComponent("Reynard.ipa")
+        let sideloadIPA = docs.appendingPathComponent("MuSe.ipa")
         try? FileManager.default.removeItem(at: sideloadIPA)
         
         fetchUpdates()
     }
     
     private func fetchUpdates() {
+        // MuSe: disabled - upstream source.json would offer Reynard updates over MuSe
+        return
         DispatchQueue.global(qos: .background).async {
             guard let url = URL(string: Self.sourceURL),
                   let data = try? Data(contentsOf: url) else { return }
