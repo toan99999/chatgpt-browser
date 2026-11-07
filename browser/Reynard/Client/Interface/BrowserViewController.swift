@@ -168,7 +168,7 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
         applyUpdateMenuButtonBadge()
         
         tabManager.createInitialTab()
-        // MuSe: always open straight to Muse on launch
+        // Muse: always open straight to Muse on launch
         if let tab = tabManager.selectedTab, tab.url != "https://muse.ai" {
             tabManager.browse(to: "https://muse.ai", in: tab)
         }
@@ -622,7 +622,7 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
         contentView.applyLayout(
             ContentView.LayoutState(mode: isSearchFocused ? .searchFocused : .standard),
             topAnchor: view.safeAreaLayoutGuide.topAnchor,
-            bottomAnchor: view.safeAreaLayoutGuide.bottomAnchor // MuSe: toolbar hidden, content fills screen
+            bottomAnchor: view.safeAreaLayoutGuide.bottomAnchor // Muse: toolbar hidden, content fills screen
         )
         tabBar.setVisibility(.hidden, animated: false)
     }
@@ -630,8 +630,8 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
     private func applyCompactLayout() {
         contentView.applyLayout(
             ContentView.LayoutState(mode: .standard),
-            topAnchor: view.safeAreaLayoutGuide.topAnchor, // MuSe: toolbar hidden
-            bottomAnchor: view.safeAreaLayoutGuide.bottomAnchor // MuSe: toolbar hidden
+            topAnchor: view.safeAreaLayoutGuide.topAnchor, // Muse: toolbar hidden
+            bottomAnchor: view.safeAreaLayoutGuide.bottomAnchor // Muse: toolbar hidden
         )
         tabBar.setVisibility(.hidden, animated: false)
     }
@@ -639,7 +639,7 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
     private func applyPadLayout(animated: Bool) {
         contentView.applyLayout(
             ContentView.LayoutState(mode: .standard),
-            topAnchor: view.safeAreaLayoutGuide.topAnchor, // MuSe: toolbar hidden
+            topAnchor: view.safeAreaLayoutGuide.topAnchor, // Muse: toolbar hidden
             bottomAnchor: view.bottomAnchor
         )
         tabBar.setVisibility(targetTabBarVisibility, animated: animated)
