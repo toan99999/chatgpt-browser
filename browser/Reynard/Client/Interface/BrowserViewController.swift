@@ -158,6 +158,7 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
         RuntimePreferences.apply() // Gecko prefs
         
         configureBrowserInterface()
+        configureThreeFingerTapGesture()
         observeNotifications()
         contextMenuCoordinator.configure()
         downloadsCoordinator.startObservingStore()
@@ -188,7 +189,30 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
         
         updateBrowserLayout(animated: false)
     }
-    
+
+    // ChatGPT: 3-finger tap toggles the address bar on/off. The toolbar is
+    // hidden by default; tapping with 3 fingers shows it (so the address
+    // can be seen/edited and the back/forward buttons can be used),
+    // tapping again hides it.
+    private func configureThreeFingerTapGesture() {
+        let threeFingerTap = UITapGestureRecognizer(
+            target: self,
+            action: #selector(handleThreeFingerTap)
+        )
+        threeFingerTap.numberOfTouchesRequired = 3
+        threeFingerTap.numberOfTapsRequired = 1
+        // Don't swallow the touches: the web page still receives them.
+        threeFingerTap.cancelsTouchesInView = false
+        view.addGestureRecognizer(threeFingerTap)
+    }
+
+    @objc private func handleThreeFingerTap() {
+        browserChrome.isAddressBarVisible.toggle()
+        updateBrowserLayout(animated: true)
+        updateNavigationButtons()
+        view.setNeedsLayout()
+    }
+
     override func viewWillAppear(_ animated: Bool) {
         super.viewWillAppear(animated)
         toolbarController.unlock(for: .viewPresentation)
@@ -229,12 +253,15 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
         let showsHomepage = tabManager.selectedTab.map(homepageOverlayCoordinator.isHomepageTab) ?? false
         toolbarController.updateLayout(
             chromeMode: browserLayout.chromeMode,
-            // ChatGPT: toolbar is always hidden — report it as disabled so Gecko
-            // gets a 0-height dynamic toolbar and the page uses the full
-            // viewport. Otherwise the hidden bottom toolbar still reports
-            // 94pt and the web page lays out in a viewport shorter than the
-            // screen (dead space below the last message in chatgpt.com chat).
-            isToolbarEnabled: false,
+            // ChatGPT: toolbar is hidden by default — report it as disabled so
+            // Gecko gets a 0-height dynamic toolbar and the page uses the
+            // full viewport. Otherwise the hidden bottom toolbar still
+            // reports 94pt and the web page lays out in a viewport shorter
+            // than the screen (dead space below the last message in
+            // chatgpt.com chat). When the address bar is toggled on
+            // (3-finger tap), enable it so Gecko reserves space for the
+            // toolbar.
+            isToolbarEnabled: browserChrome.isAddressBarVisible && !isShowingFullscreenMedia,
             extendsContentBehindToolbar: showsHomepage
         )
         homepageOverlayCoordinator.updateVisibleContentInsets()
@@ -622,7 +649,12 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
         contentView.applyLayout(
             ContentView.LayoutState(mode: isSearchFocused ? .searchFocused : .standard),
             topAnchor: view.safeAreaLayoutGuide.topAnchor,
-            bottomAnchor: view.safeAreaLayoutGuide.bottomAnchor // ChatGPT: toolbar hidden, content fills screen
+            // ChatGPT: toolbar hidden by default, content fills the screen.
+            // When the address bar is toggled on (3-finger tap), anchor the
+            // content above the bottom toolbar (upstream behaviour).
+            bottomAnchor: (isSearchFocused || !browserChrome.isAddressBarVisible)
+            ? view.safeAreaLayoutGuide.bottomAnchor
+            : browserChrome.bottomToolbarTopAnchor
         )
         tabBar.setVisibility(.hidden, animated: false)
     }
@@ -630,8 +662,11 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
     private func applyCompactLayout() {
         contentView.applyLayout(
             ContentView.LayoutState(mode: .standard),
-            topAnchor: view.safeAreaLayoutGuide.topAnchor, // ChatGPT: toolbar hidden
-            bottomAnchor: view.safeAreaLayoutGuide.bottomAnchor // ChatGPT: toolbar hidden
+            // ChatGPT: toolbar hidden by default, content fills the screen.
+            // When the address bar is toggled on (3-finger tap), anchor the
+            // content between the top and bottom toolbars (upstream behaviour).
+            topAnchor: browserChrome.isAddressBarVisible ? browserChrome.topToolbarBottomAnchor : view.safeAreaLayoutGuide.topAnchor,
+            bottomAnchor: browserChrome.isAddressBarVisible ? browserChrome.bottomToolbarTopAnchor : view.safeAreaLayoutGuide.bottomAnchor
         )
         tabBar.setVisibility(.hidden, animated: false)
     }
@@ -1108,20 +1143,25 @@ final class BrowserViewController: UIViewController, GeckoScreenOrientationDeleg
             return
         }
         
-        // ChatGPT: no back navigation — the app always opens to chatgpt.com, so the
-        // back button is disabled and the swipe-back gesture (which slides the
-        // previous page in with its own header) is turned off entirely.
+        // ChatGPT: back/forward buttons work only while the toolbar is shown
+        // (3-finger tap). When the toolbar is hidden the buttons are hidden
+        // too, so they stay disabled; when it is shown, both buttons follow
+        // the tab's real history. The swipe-back gesture stays off in both
+        // cases (it slides the previous page in with its own header).
+        let navEnabled = browserChrome.isAddressBarVisible
+        let canGoBack = navEnabled && tab.state.navigationState.canGoBack
+        let canGoForward = navEnabled && tab.state.navigationState.canGoForward
         browserChrome.updateNavigation(
-            canGoBack: false,
-            canGoForward: tab.state.navigationState.canGoForward,
+            canGoBack: canGoBack,
+            canGoForward: canGoForward,
             canShare: tabManager.shareableURL(for: tab) != nil
         )
-        
+
         let previewImages = tabManager.navigationPreviewImages(for: tab)
         contentView.setHistoryNavigation(
-            canGoBack: false,
-            canGoForward: tab.state.navigationState.canGoForward,
-            backPreviewImage: nil,
+            canGoBack: canGoBack,
+            canGoForward: canGoForward,
+            backPreviewImage: navEnabled ? previewImages.backImage : nil,
             forwardPreviewImage: previewImages.forwardImage,
             isSwipeEnabled: false
         )
