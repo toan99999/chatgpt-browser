@@ -16,10 +16,10 @@ struct PermissionPromptPresenter: PermissionPromptPresenting {
         cancelTitle: String,
         for session: GeckoSession
     ) async -> Bool {
-        guard let presenter = UIApplication.shared.topViewController() else {
+        guard let presenter = await findPresenter() else {
             return false
         }
-        
+
         return await withCheckedContinuation { continuation in
             var allowed = false
             let alert = PromptAlertController(
@@ -43,5 +43,49 @@ struct PermissionPromptPresenter: PermissionPromptPresenting {
             })
             presenter.present(alert, animated: true)
         }
+    }
+
+    // ChatGPT: find a view controller that can actually present the
+    // permission alert. The old code returned "deny" immediately when
+    // topViewController() was nil, so a mic/camera request arriving while
+    // the app was still launching (or mid-transition, with no
+    // foreground-active scene yet) was silently recorded as "blocked" and
+    // the user never saw a prompt — e.g. chatgpt.com ending up in the
+    // denied list at 09:17 on 2026-11-08 despite the default being "Ask".
+    // Wait briefly for the scene to become foreground-active, then fall
+    // back to any window scene's root view controller. Only deny as a
+    // last resort when no presenter attached to a window exists at all
+    // (presenting on one without a window would show nothing and the
+    // continuation below would never resume).
+    @MainActor
+    private func findPresenter() async -> UIViewController? {
+        // 1. Fast path: a foreground-active scene is already up.
+        if let presenter = UIApplication.shared.topViewController(), presenter.view.window != nil {
+            return presenter
+        }
+        // 2. The request may have arrived during launch or a transition:
+        // give the scene up to ~3s to become foreground-active.
+        for _ in 0..<12 {
+            if Task.isCancelled {
+                return nil
+            }
+            try? await Task.sleep(nanoseconds: 250_000_000)
+            if let presenter = UIApplication.shared.topViewController(), presenter.view.window != nil {
+                return presenter
+            }
+        }
+        // 3. Last resort: any window scene, even one not foreground-active yet.
+        if let rootViewController = UIApplication.shared.connectedScenes
+            .compactMap({ $0 as? UIWindowScene })
+            .flatMap(\.windows)
+            .first(where: \.isKeyWindow)?
+            .rootViewController
+        {
+            let fallback = UIApplication.shared.topViewController(from: rootViewController)
+            if fallback.view.window != nil {
+                return fallback
+            }
+        }
+        return nil
     }
 }
