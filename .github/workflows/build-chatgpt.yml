@@ -2,6 +2,7 @@
 # Run from Actions tab -> Build ChatGPT (TrollStore) -> Run workflow
 # Result: artifact ChatGPT-TrollStore.tipa, install with TrollStore on iOS 17.0
 name: Build ChatGPT (TrollStore)
+
 on:
   workflow_dispatch:
   # keep-warm — scheduled cache-hit build twice a week (Sun & Wed 03:00 UTC) so the Gecko objdir/sccache caches stay warm; free on public repos.
@@ -14,8 +15,10 @@ on:
       - '.github/workflows/build.yml'
       - 'browser/**'
       - 'tools/release/**'
+
 permissions:
   contents: read
+
 jobs:
   build:
     uses: ./.github/workflows/build.yml
