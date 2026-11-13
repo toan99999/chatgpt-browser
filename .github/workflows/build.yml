@@ -78,13 +78,21 @@ jobs:
     needs: prepare
     if: ${{ needs.prepare.outputs.should_build == 'true' }}
     name: "${{ matrix.variant == 'standard' && 'Build Standard / TrollStore' || 'Build Jailbroken' }}"
-    runs-on: macos-26
+    # ChatGPT 2026-11-14: retry the Firefox 160 full build on the Intel
+    # runner (4 vCPU / 14 GB) after run #11 was killed by GitHub's 6h job
+    # cap on macos-26 arm64 (3 vCPU / 7 GB). Same macOS generation, so
+    # Xcode 26.6 and the iOS target are unchanged; only the build host
+    # changes. If this is slower, switch back to macos-26.
+    runs-on: macos-26-intel
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
     env:
       SCCACHE_GHA_ENABLED: "true"
       SCCACHE_GHA_VERSION: ${{ matrix.sccache_namespace }}
+      # If the sccache backend blips mid-build, fall back to the local
+      # compiler instead of failing a multi-hour build.
+      SCCACHE_IGNORE_SERVER_IO_ERROR: "1"
 
     steps:
       - name: Check out repository
@@ -134,9 +142,9 @@ jobs:
             ~/.cargo/registry
             ~/.cargo/git
             ~/.mozbuild
-          key: buildcache-gecko-deps-${{ matrix.variant }}-${{ steps.rust_toolchain.outputs.hash }}-${{ hashFiles('engine/release.txt') }}
+          key: buildcache-gecko-deps-${{ matrix.variant }}-${{ runner.arch }}-${{ steps.rust_toolchain.outputs.hash }}-${{ hashFiles('engine/release.txt') }}
           restore-keys: |
-            buildcache-gecko-deps-${{ matrix.variant }}-${{ steps.rust_toolchain.outputs.hash }}-
+            buildcache-gecko-deps-${{ matrix.variant }}-${{ runner.arch }}-${{ steps.rust_toolchain.outputs.hash }}-
 
       - name: Restore idevice build cache
         uses: actions/cache@v4
@@ -144,12 +152,28 @@ jobs:
           path: |
             support/idevice/target
             browser/Reynard/JIT/RPPairing/libidevice_ffi.a
-          key: buildcache-idevice-${{ steps.rust_toolchain.outputs.hash }}-${{ hashFiles('support/idevice/Cargo.lock', 'support/idevice/Cargo.toml', 'tools/development/build-idevice.sh') }}
+          key: buildcache-idevice-${{ runner.arch }}-${{ steps.rust_toolchain.outputs.hash }}-${{ hashFiles('support/idevice/Cargo.lock', 'support/idevice/Cargo.toml', 'tools/development/build-idevice.sh') }}
           restore-keys: |
-            buildcache-idevice-${{ steps.rust_toolchain.outputs.hash }}-
+            buildcache-idevice-${{ runner.arch }}-${{ steps.rust_toolchain.outputs.hash }}-
 
       - name: Set up sccache
         uses: mozilla-actions/sccache-action@v0.0.11
+
+      # Warm up the sccache server with retries: a transient GitHub cache
+      # backend outage at startup otherwise aborts the whole multi-hour
+      # build. Mid-build blips are non-fatal cache misses, and
+      # SCCACHE_IGNORE_SERVER_IO_ERROR falls back to the local compiler.
+      - name: Warm up sccache
+        run: |
+          for i in 1 2 3; do
+            if sccache --show-stats >/dev/null 2>&1; then
+              echo "sccache server is up (attempt $i)"
+              exit 0
+            fi
+            echo "sccache not responding (attempt $i), retrying in 10s..."
+            sleep 10
+          done
+          echo "::warning::sccache server did not respond after 3 attempts; continuing with local-compiler fallback"
 
       # ChatGPT: cache the WHOLE Gecko objdir, not just dist. Run #5 proved a
       # dist-only cache is incomplete (missing generated header ErrorList.h),
@@ -165,7 +189,7 @@ jobs:
         uses: actions/cache/restore@v4
         with:
           path: engine/firefox/obj-aarch64-apple-ios
-          key: gecko-objdir-${{ matrix.variant }}-xcode-26.6-${{ steps.rust_toolchain.outputs.hash }}-${{ hashFiles('engine/release.txt', 'patches/**', 'tools/development/build-gecko.sh', 'tools/development/apply-patches.sh') }}
+          key: gecko-objdir-${{ matrix.variant }}-${{ runner.arch }}-xcode-26.6-${{ steps.rust_toolchain.outputs.hash }}-${{ hashFiles('engine/release.txt', 'patches/**', 'tools/development/build-gecko.sh', 'tools/development/apply-patches.sh') }}
 
       - name: Build Gecko
         if: steps.gecko_objdir.outputs.cache-hit != 'true'
@@ -182,7 +206,7 @@ jobs:
         uses: actions/cache/save@v4
         with:
           path: engine/firefox/obj-aarch64-apple-ios
-          key: gecko-objdir-${{ matrix.variant }}-xcode-26.6-${{ steps.rust_toolchain.outputs.hash }}-${{ hashFiles('engine/release.txt', 'patches/**', 'tools/development/build-gecko.sh', 'tools/development/apply-patches.sh') }}
+          key: gecko-objdir-${{ matrix.variant }}-${{ runner.arch }}-xcode-26.6-${{ steps.rust_toolchain.outputs.hash }}-${{ hashFiles('engine/release.txt', 'patches/**', 'tools/development/build-gecko.sh', 'tools/development/apply-patches.sh') }}
 
       - name: Build idevice support library
         run: ./tools/development/build-idevice.sh
@@ -228,3 +252,7 @@ jobs:
           name: ChatGPT-Jailbroken.ipa
           path: dist/ChatGPT-Jailbroken.ipa
           if-no-files-found: error
+
+      - name: Show sccache stats
+        if: always()
+        run: sccache --show-stats || true
