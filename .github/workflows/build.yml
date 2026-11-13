@@ -78,12 +78,14 @@ jobs:
     needs: prepare
     if: ${{ needs.prepare.outputs.should_build == 'true' }}
     name: "${{ matrix.variant == 'standard' && 'Build Standard / TrollStore' || 'Build Jailbroken' }}"
-    # ChatGPT 2026-11-14: retry the Firefox 160 full build on the Intel
-    # runner (4 vCPU / 14 GB) after run #11 was killed by GitHub's 6h job
-    # cap on macos-26 arm64 (3 vCPU / 7 GB). Same macOS generation, so
-    # Xcode 26.6 and the iOS target are unchanged; only the build host
-    # changes. If this is slower, switch back to macos-26.
-    runs-on: macos-26-intel
+    # ChatGPT 2026-11-14: back on macos-26 arm64 (3 vCPU / 7 GB) to reuse
+    # run #11's warm sccache — same host arch, same compiler/rustc, so its
+    # 5h51m of compiled objects should be cache hits and the retry should
+    # be mostly link + packaging (~1-2h). The Intel attempt (run #14,
+    # macos-26-intel) was cancelled: its sccache reuse was uncertain (host
+    # rustc differs, C++ reuse unproven) and a cold-ish rebuild on slower
+    # per-core Intel risked the 6h cap again.
+    runs-on: macos-26
     strategy:
       fail-fast: false
       matrix: ${{ fromJSON(needs.prepare.outputs.matrix) }}
