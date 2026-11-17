@@ -6,8 +6,10 @@ name: Build ChatGPT (TrollStore)
 on:
   workflow_dispatch:
   # keep-warm — scheduled cache-hit build twice a week (Sun & Wed 03:00 UTC) so the Gecko objdir/sccache caches stay warm; free on public repos.
-  schedule:
-    - cron: '0 3 * * 0,3'
+  # PAUSED during retry (re-enable after the retry succeeds): avoids two full
+  # builds of the same repo running in parallel and evicting each other's cache.
+  # schedule:
+  #   - cron: '0 3 * * 0,3'
   push:
     branches: [main]
     paths:
